@@ -2,9 +2,10 @@ import { deployments, ethers, getNamedAccounts } from 'hardhat';
 import { Signer, Wallet } from 'ethers';
 import { assert } from 'chai';
 
-import { Greeter } from '../types';
+import { MTRL } from '../types';
 import { EthereumAddress } from '../helpers/types';
-import { getGreeterDeployment, deployGreeter } from '../helpers/contract';
+import { getMTRLDeployment } from '../helpers/contract';
+import { expandToDecimals } from '../helpers/utils';
 
 export interface IAccount {
   address: EthereumAddress;
@@ -13,24 +14,35 @@ export interface IAccount {
 }
 
 export interface TestVars {
-  Greeter: Greeter;
+  MTRL: MTRL;
   accounts: IAccount[];
-  team: IAccount;
+  admin: IAccount;
 }
 
 const testVars: TestVars = {
-  Greeter: {} as Greeter,
+  MTRL: {} as MTRL,
   accounts: {} as IAccount[],
-  team: {} as IAccount,
+  admin: {} as IAccount,
 };
 
-const setupOtherTestEnv = async (vars: TestVars) => {
-  // setup other test env
+export const userBalance = expandToDecimals(10, 18);
+export const totalSupply = expandToDecimals(100000000, 18);
 
-  return {
-    Greeter: await deployGreeter('greeting'),
-    // Greeter: await getGreeterDeployment(),
-  };
+const setupTestEnv = async (vars: TestVars) => {
+  const { accounts, admin } = vars;
+  const MTRL = await getMTRLDeployment();
+
+  // mint totalSupply / 2 tokens to admin
+  await MTRL.connect(admin.signer).mint(admin.address, totalSupply.div(2));
+
+  // sent userBalance tokens to all users
+  for (let i = 0; i < accounts.length; i++) {
+    if (accounts[i].address !== admin.address) {
+      await MTRL.connect(admin.signer).transfer(accounts[i].address, userBalance);
+    }
+  }
+
+  return { MTRL };
 };
 
 export function runTestSuite(title: string, tests: (arg: TestVars) => void) {
@@ -55,22 +67,22 @@ export function runTestSuite(title: string, tests: (arg: TestVars) => void) {
         'invalid mnemonic or address'
       );
 
-      const { team } = await getNamedAccounts();
+      const { admin } = await getNamedAccounts();
       // address used in performing admin actions in InterestRateModel
-      testVars.team = testVars.accounts.find(
-        (x) => x.address.toLowerCase() === team.toLowerCase()
+      testVars.admin = testVars.accounts.find(
+        (x) => x.address.toLowerCase() === admin.toLowerCase()
       ) as IAccount;
     });
 
     beforeEach(async () => {
-      const setupTest = deployments.createFixture(
+      const setupDeployedContracts = deployments.createFixture(
         async ({ deployments, getNamedAccounts, ethers }, options) => {
           await deployments.fixture(); // ensure you start from a fresh deployments
         }
       );
 
-      await setupTest();
-      const vars = await setupOtherTestEnv(testVars);
+      await setupDeployedContracts();
+      const vars = await setupTestEnv(testVars);
       Object.assign(testVars, vars);
     });
 

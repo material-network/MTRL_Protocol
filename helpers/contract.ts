@@ -1,6 +1,6 @@
 import { deployments, ethers, waffle, getNamedAccounts } from 'hardhat';
 import { Contract } from 'ethers';
-import { Greeter } from '../types';
+import { MTRL } from '../types';
 import { ContractId } from './types';
 
 export const deployContract = async <ContractType extends Contract>(
@@ -20,15 +20,15 @@ export const deployContract = async <ContractType extends Contract>(
   return contract;
 };
 
-export const deployGreeter = async (_greeting: string) => {
-  return await deployContract<Greeter>('Greeter', [_greeting]);
+export const deployMTRL = async (admin: string) => {
+  return await deployContract<MTRL>('MTRL', [admin]);
 };
 
-export const getGreeterDeployment = async (): Promise<Greeter> => {
+export const getMTRLDeployment = async (): Promise<MTRL> => {
   return (await ethers.getContractAt(
-    ContractId.Greeter,
+    ContractId.MTRL,
     (
-      await deployments.get(ContractId.Greeter)
+      await deployments.get(ContractId.MTRL)
     ).address
-  )) as Greeter;
+  )) as MTRL;
 };

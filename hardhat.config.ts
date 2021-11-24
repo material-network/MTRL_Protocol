@@ -44,7 +44,7 @@ export default {
   },
   namedAccounts: {
     deployer: 0,
-    team: 1, // @TODO replace with proper address
+    admin: 1, // @TODO replace with proper address
   },
   networks: {
     hardhat: {

@@ -14,7 +14,7 @@ runTestSuite('MTRL', (vars: TestVars) => {
   });
 
   describe('mint', async () => {
-    it('reverted cases', async () => {
+    it('reverted cases when trying to mint', async () => {
       const {
         MTRL,
         accounts: [denis],
@@ -23,7 +23,7 @@ runTestSuite('MTRL', (vars: TestVars) => {
 
       // when noAdmins trying to mint new tokens
       await expect(MTRL.connect(denis.signer).mint(denis.address, 1)).to.be.revertedWith(
-        'onlyAdmin: caller is not the owner'
+        'mint: no permission to mint tokens'
       );
 
       // when trying to 0 mint token
@@ -43,70 +43,47 @@ runTestSuite('MTRL', (vars: TestVars) => {
       );
     });
 
-    it('success', async () => {
+    it('success when call setMinter & mint functions', async () => {
+      const {
+        MTRL,
+        accounts: [minter, admin],
+      } = vars;
+
+      await MTRL.connect(admin.signer).setMinter(minter.address, true);
+      await MTRL.connect(minter.signer).mint(minter.address, amount);
+      const minterBalance = await MTRL.balanceOf(minter.address);
+      expect(minterBalance).to.be.eq(userBalance.add(amount));
+    });
+  });
+
+  describe('setTransfersAllowed', async () => {
+    it('reverted when trying without admin permissions', async () => {
       const {
         MTRL,
         accounts: [denis, admin],
       } = vars;
 
-      await MTRL.connect(admin.signer).mint(denis.address, amount);
-      const denisBalance = await MTRL.balanceOf(denis.address);
-      expect(denisBalance).to.be.eq(userBalance.add(amount));
-    });
-  });
-
-  describe('set new admins', async () => {
-    it('reverted cases', async () => {
-      const {
-        MTRL,
-        accounts: [denis],
-        admin,
-      } = vars;
-
-      // when noAdmins trying to set admin
-      await expect(MTRL.connect(denis.signer).setAdmin(denis.address, true)).to.be.revertedWith(
+      // when non-admin calls setTransfersAllowed
+      await expect(MTRL.connect(denis.signer).setTransfersAllowed(false)).to.be.revertedWith(
         'onlyAdmin: caller is not the owner'
       );
-
-      // when trying to set invalid admin
-      await expect(
-        MTRL.connect(admin.signer).setAdmin(constants.AddressZero, true)
-      ).to.be.revertedWith('setAdmin: _addr is invalid');
     });
 
-    it('success', async () => {
-      const {
-        MTRL,
-        admin,
-        accounts: [denis],
-      } = vars;
-
-      await MTRL.connect(admin.signer).setAdmin(denis.address, true);
-      expect(await MTRL.isAdmin(denis.address)).to.be.true;
-      await MTRL.connect(denis.signer).setAdmin(denis.address, false);
-      expect(await MTRL.isAdmin(denis.address)).to.be.false;
-    });
-  });
-
-  describe('transfer', async () => {
-    it('reverted cases when transfer is disabled', async () => {
+    it('success when call setTransferAllowed', async () => {
       const {
         MTRL,
         accounts: [denis, admin, stephon],
       } = vars;
 
+      // set transfersAllowed to false
       await MTRL.connect(admin.signer).setTransfersAllowed(false);
-      await expect(MTRL.connect(denis.signer).transfer(stephon.address, 1)).to.be.revertedWith(
-        'transfer: transfer is disabled'
+      expect(await MTRL.transfersAllowed()).to.be.false;
+      await expect(MTRL.connect(admin.signer).transfer(denis.address, amount)).to.be.revertedWith(
+        '_beforeTokenTransfer: transfer is disabled'
       );
-    });
 
-    it('success', async () => {
-      const {
-        MTRL,
-        accounts: [denis, admin, stephon],
-      } = vars;
-
+      // set transfersAllowed to true
+      await MTRL.connect(admin.signer).setTransfersAllowed(true);
       await MTRL.connect(denis.signer).transfer(stephon.address, amount);
       expect(await MTRL.balanceOf(denis.address)).to.be.eq(userBalance.sub(amount));
       expect(await MTRL.balanceOf(stephon.address)).to.be.eq(userBalance.add(amount));

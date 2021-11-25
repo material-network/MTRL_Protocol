@@ -6,8 +6,11 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol';
 
 contract MTRL is ERC20, ERC20Permit {
-    /// @dev admins that can mint tokens
-    mapping(address => bool) public isAdmin;
+    /// @dev admin that can manage minters and transfer
+    address public admin;
+
+    /// @dev addresses that have mint permissions
+    mapping(address => bool) public canMint;
 
     /// @dev initial supply to be minted
     uint256 public constant TOTAL_SUPPLY = 100_000_000e18;
@@ -19,22 +22,24 @@ contract MTRL is ERC20, ERC20Permit {
     event TransfersAllowed(bool transfersAllowed);
 
     constructor(address _admin) ERC20('Material', 'MTRL') ERC20Permit('Material') {
-        isAdmin[_admin] = true;
+        require(_admin != address(0), 'constructor: invalid admin');
+        admin = _admin;
     }
 
     modifier onlyAdmin() {
-        require(isAdmin[msg.sender], 'onlyAdmin: caller is not the owner');
+        require(admin == msg.sender, 'onlyAdmin: caller is not the owner');
         _;
     }
 
     /// @dev set admins that have permissions to mint
-    function setAdmin(address _addr, bool _isAdmin) external onlyAdmin {
-        require(_addr != address(0), 'setAdmin: _addr is invalid');
-        isAdmin[_addr] = _isAdmin;
+    function setMinter(address _addr, bool _mintable) external onlyAdmin {
+        require(_addr != address(0), 'setMinters: _addr is invalid');
+        canMint[_addr] = _mintable;
     }
 
     /// @dev only admins can mint new tokens
-    function mint(address _account, uint256 _amount) external onlyAdmin {
+    function mint(address _account, uint256 _amount) external {
+        require(canMint[msg.sender] || msg.sender == admin, 'mint: no permission to mint tokens');
         require(_account != address(0), 'mint: _addr is invalid');
         require(_amount > 0, 'mint: _amount is invalid');
         require(totalSupply() + _amount <= TOTAL_SUPPLY, 'mint: exceeds total supply');
@@ -54,6 +59,6 @@ contract MTRL is ERC20, ERC20Permit {
         address to,
         uint256 amount
     ) internal virtual override {
-        require(transfersAllowed, 'transfer: transfer is disabled');
+        require(transfersAllowed, '_beforeTokenTransfer: transfer is disabled');
     }
 }

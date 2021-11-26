@@ -5,6 +5,7 @@ types
 cache
 artifacts
 types
+deployments
 
 #IDE
 .vscode
@@ -15,3 +16,6 @@ coverage.json
 
 #System
 **/.DS_Store
+
+#Environment
+.env

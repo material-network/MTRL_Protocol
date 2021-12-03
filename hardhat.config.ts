@@ -22,10 +22,6 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
   }
 });
 
-console.log('===>KOVAN_PROVIDER_URLv', process.env.KOVAN_PROVIDER_URL);
-console.log('===>PRIVATE_KEY', process.env.PRIVATE_KEY);
-console.log('===>ETHERESCAN_API', process.env.ETHERESCAN_API);
-
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 

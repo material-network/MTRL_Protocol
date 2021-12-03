@@ -33,15 +33,6 @@ export async function signPermitMessage(
     )
   );
 
-  // console.log(
-  //   '==============>',
-  //   keccak256(
-  //     defaultAbiCoder.encode(
-  //       ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],
-  //       [PERMIT_TYPEHASH, approve.owner, approve.spender, approve.value, nonce, deadline]
-  //     )
-  //   )
-  // );
   const structHash = keccak256(
     defaultAbiCoder.encode(
       ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],

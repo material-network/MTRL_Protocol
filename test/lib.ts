@@ -32,9 +32,6 @@ const setupTestEnv = async (vars: TestVars) => {
   const { accounts, admin } = vars;
   const MTRL = await getMTRLDeployment();
 
-  // mint totalSupply / 2 tokens to admin
-  await MTRL.connect(admin.signer).mint(admin.address, totalSupply.div(2));
-
   // sent userBalance tokens to all users
   for (let i = 0; i < accounts.length; i++) {
     if (accounts[i].address !== admin.address) {

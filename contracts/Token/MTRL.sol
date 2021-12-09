@@ -10,7 +10,7 @@ contract MTRL is ERC20, ERC20Permit {
     address public admin;
 
     /// @dev initial supply to be minted
-    uint256 public constant TOTAL_SUPPLY = 100_000_000e18;
+    uint256 public constant INITIAL_SUPPLY = 100_000_000e18;
 
     /// @dev enable/disable token transfer
     bool public transfersAllowed = true;
@@ -21,7 +21,7 @@ contract MTRL is ERC20, ERC20Permit {
     constructor(address _admin) ERC20('Material', 'MTRL') ERC20Permit('Material') {
         require(_admin != address(0), 'constructor: invalid admin');
         admin = _admin;
-        _mint(_admin, TOTAL_SUPPLY);
+        _mint(_admin, INITIAL_SUPPLY);
     }
 
     modifier onlyAdmin() {
@@ -35,6 +35,7 @@ contract MTRL is ERC20, ERC20Permit {
         emit TransfersAllowed(transfersAllowed);
     }
 
+    /// @dev transfer ownership
     function transferOwnership(address _newAdmin) external onlyAdmin {
         require(admin != _newAdmin && _newAdmin != address(0), 'transferOwnership: invalid admin');
         admin = _newAdmin;

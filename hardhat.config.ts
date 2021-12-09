@@ -49,20 +49,34 @@ export default {
     deployer: {
       default: 0,
       kovan: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
+      mainnet: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
     },
     admin: {
       default: 1,
       kovan: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
+      mainnet: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
     },
   },
   gasReporter: {
     currency: 'USD',
-    gasPrice: 21,
+    gasPrice: 110,
   },
   networks: {
+    // hardhat: {
+    //   forking: {
+    //     url: process.env.MAINNET_PROVIDER_URL as string,
+    //   },
+    // },
     kovan: {
       url: process.env.KOVAN_PROVIDER_URL as string,
       accounts: [process.env.PRIVATE_KEY],
+    },
+    mainnet: {
+      url: process.env.MAINNET_PROVIDER_URL as string,
+      accounts: [process.env.PRIVATE_KEY],
+      saveDeployments: true,
+      gas: 2400000,
+      gasPrice: 100 * 1000000000,
     },
   },
   etherscan: {

@@ -39,7 +39,7 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
       const { MTRLVesting } = vars;
 
       await advanceBlocks(START_VESTING_AFTER_BLOCKS);
-      await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no MTRL tokens');
+      await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');
     });
   });
 
@@ -68,19 +68,27 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
       // start vesting
       await advanceBlocks(START_VESTING_AFTER_BLOCKS + 1);
 
+      // doing claim before one month
+      await expect(await MTRLVesting.claim())
+        .to.emit(MTRLVesting, 'CLAIMED')
+        .withArgs(0, 0, wallet.address);
+
       let prevVestingBalance;
       let afterVestingBalance;
       let prevWalletBalance;
       let afterWalletBalance;
 
-      for (let i = 0; i < 18; i++) {
+      // after one month
+      await advanceBlocks(UNLOCK_CYCLE_TEST_NNET);
+
+      for (let i = 1; i <= 18; i++) {
         prevVestingBalance = await MTRL.balanceOf(MTRLVesting.address);
         prevWalletBalance = await MTRL.balanceOf(wallet.address);
 
         // doing claim
         await expect(await MTRLVesting.claim())
           .to.emit(MTRLVesting, 'CLAIMED')
-          .withArgs(UnlockAmount, i + 1, wallet.address);
+          .withArgs(UnlockAmount, i, wallet.address);
 
         afterVestingBalance = await MTRL.balanceOf(MTRLVesting.address);
         expect(afterVestingBalance).to.be.eq(prevVestingBalance.sub(UnlockAmount));
@@ -88,14 +96,14 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
         afterWalletBalance = await MTRL.balanceOf(wallet.address);
         expect(afterWalletBalance).to.be.eq(prevWalletBalance.add(UnlockAmount));
 
-        if (i < 17) {
+        if (i < 18) {
           prevVestingBalance = afterVestingBalance;
           prevWalletBalance = afterWalletBalance;
 
           // doing again soon
           await expect(await MTRLVesting.claim())
             .to.emit(MTRLVesting, 'CLAIMED')
-            .withArgs(0, i + 1, wallet.address);
+            .withArgs(0, i, wallet.address);
 
           afterVestingBalance = await MTRL.balanceOf(MTRLVesting.address);
           expect(afterVestingBalance).to.be.eq(prevVestingBalance);
@@ -104,11 +112,13 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
           expect(afterWalletBalance).to.be.eq(prevWalletBalance);
         } else {
           // last month
-          await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no MTRL tokens');
+          await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');
         }
 
         await advanceBlocks(UNLOCK_CYCLE_TEST_NNET);
       }
+
+      await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');
     });
   });
 });

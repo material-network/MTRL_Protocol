@@ -56,6 +56,11 @@ export default {
       kovan: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
       mainnet: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
     },
+    wallet: {
+      default: 2,
+      kovan: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
+      mainnet: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
+    },
   },
   gasReporter: {
     currency: 'USD',

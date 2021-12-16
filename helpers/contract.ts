@@ -1,6 +1,6 @@
-import { deployments, ethers, waffle, getNamedAccounts } from 'hardhat';
+import { deployments, ethers } from 'hardhat';
 import { Contract } from 'ethers';
-import { MTRL } from '../types';
+import { MTRL, MTRLVesting } from '../types';
 import { ContractId } from './types';
 
 export const deployContract = async <ContractType extends Contract>(
@@ -31,4 +31,13 @@ export const getMTRLDeployment = async (): Promise<MTRL> => {
       await deployments.get(ContractId.MTRL)
     ).address
   )) as MTRL;
+};
+
+export const getMTRLVestingDeployment = async (): Promise<MTRLVesting> => {
+  return (await ethers.getContractAt(
+    ContractId.MTRLVesting,
+    (
+      await deployments.get(ContractId.MTRLVesting)
+    ).address
+  )) as MTRLVesting;
 };

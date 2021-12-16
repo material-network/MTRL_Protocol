@@ -20,28 +20,28 @@ contract MTRLVesting {
     /// @notice address that will receive unlocked tokens
     address public wallet;
 
-    /// @notice MTRL token
-    IERC20 public mtrl;
+    /// @notice vesting token (in our case, MTRL)
+    IERC20 public token;
 
     /// @notice true when nth month is unlocked
     mapping(uint256 => bool) public isUnlocked;
 
     constructor(
-        IERC20 _mtrl,
+        IERC20 _token,
         address _admin,
         address _wallet,
         uint256 _vestingStartBlock,
-        uint256 _unlockCycl
+        uint256 _unlockCycle
     ) {
         require(_vestingStartBlock != 0, 'constructor: invalid vesting start block');
-        require(address(_mtrl) != address(0), 'constructor: invalid MTRL');
+        require(address(_token) != address(0), 'constructor: invalid MTRL');
         require(_admin != address(0), 'constructor: invalid admin');
         require(_wallet != address(0), 'constructor: invalid wallet');
 
         admin = _admin;
-        mtrl = _mtrl;
+        token = _token;
         vestingStartBlock = _vestingStartBlock;
-        UNLOCK_CYCLE = _unlockCycl;
+        UNLOCK_CYCLE = _unlockCycle;
         wallet = _wallet;
     }
 
@@ -71,25 +71,23 @@ contract MTRLVesting {
     function claim() external {
         require(block.number >= vestingStartBlock, 'claim: vesting not started');
 
-        uint256 vestingBalance = mtrl.balanceOf(address(this));
-        require(vestingBalance > 0, 'claim: no MTRL tokens');
+        uint256 vestingBalance = token.balanceOf(address(this));
+        require(vestingBalance > 0, 'claim: no tokens');
 
         // record claiming month index
         uint256 index;
-        if (block.number - vestingStartBlock < UNLOCK_CYCLE) {
-            index = 1;
-        } else {
-            index = (block.number - vestingStartBlock) / UNLOCK_CYCLE + 1;
-        }
-
         uint256 transferAmount;
-        if (!isUnlocked[index]) {
-            transferAmount = vestingBalance < UNLOCK_AMOUNT
-                ? mtrl.balanceOf(address(this))
-                : UNLOCK_AMOUNT;
-            isUnlocked[index] = true;
+        if (block.number - vestingStartBlock >= UNLOCK_CYCLE) {
+            index = (block.number - vestingStartBlock) / UNLOCK_CYCLE;
 
-            mtrl.transfer(wallet, transferAmount);
+            if (!isUnlocked[index]) {
+                transferAmount = vestingBalance < UNLOCK_AMOUNT
+                    ? token.balanceOf(address(this))
+                    : UNLOCK_AMOUNT;
+                isUnlocked[index] = true;
+
+                token.transfer(wallet, transferAmount);
+            }
         }
 
         emit CLAIMED(transferAmount, index, wallet);

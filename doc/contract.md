@@ -36,4 +36,4 @@ When deploy, should set `mtrl token address`, `admin address`, `wallet address`,
 - vesting not started.
 - vesting contract has not enough tokens.
 
-2. when this funciton is called multiple times in one cycle, only first will work.
+2. when this funciton is called multiple times in one cycle, only the first will unlock and send tokens even though the tx is not failed.

@@ -1,10 +1,10 @@
-import { deployments, ethers, getNamedAccounts } from 'hardhat';
+import { deployments, ethers, getNamedAccounts, network } from 'hardhat';
 import { Signer, Wallet } from 'ethers';
 import { assert } from 'chai';
 
-import { MTRL } from '../types';
+import { MTRL, MTRLVesting } from '../types';
 import { EthereumAddress } from '../helpers/types';
-import { getMTRLDeployment } from '../helpers/contract';
+import { getMTRLDeployment, getMTRLVestingDeployment } from '../helpers/contract';
 import { expandToDecimals } from '../helpers/utils';
 
 export interface IAccount {
@@ -15,12 +15,14 @@ export interface IAccount {
 
 export interface TestVars {
   MTRL: MTRL;
+  MTRLVesting: MTRLVesting;
   accounts: IAccount[];
   admin: IAccount;
 }
 
 const testVars: TestVars = {
   MTRL: {} as MTRL,
+  MTRLVesting: {} as MTRLVesting,
   accounts: {} as IAccount[],
   admin: {} as IAccount,
 };
@@ -39,7 +41,9 @@ const setupTestEnv = async (vars: TestVars) => {
     }
   }
 
-  return { MTRL };
+  const MTRLVesting = await getMTRLVestingDeployment();
+
+  return { MTRL, MTRLVesting };
 };
 
 export function runTestSuite(title: string, tests: (arg: TestVars) => void) {
@@ -86,3 +90,18 @@ export function runTestSuite(title: string, tests: (arg: TestVars) => void) {
     tests(testVars);
   });
 }
+
+export const timeTravel = async (seconds: number) => {
+  await network.provider.send('evm_increaseTime', [seconds]);
+  await network.provider.send('evm_mine', []);
+};
+
+export const advanceBlock = async () => {
+  await ethers.provider.send('evm_mine', []);
+};
+
+export const advanceBlocks = async (blocks: number) => {
+  for (let i = 0; i < blocks; i++) {
+    await advanceBlock();
+  }
+};

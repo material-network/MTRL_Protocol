@@ -2,6 +2,7 @@ import { BigNumber, Signer } from 'ethers';
 
 export enum ContractId {
   MTRL = 'MTRL',
+  MTRLVesting = 'MTRLVesting',
 }
 
 export type EthereumAddress = string;

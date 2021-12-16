@@ -50,8 +50,8 @@ contract MTRLVesting {
         _;
     }
 
-    event SETWALLET(address indexed _newWallet);
-    event CLAIMED(uint256 indexed _amount, uint256 indexed _index, address _wallet);
+    event SetWallet(address indexed _newWallet);
+    event Claimed(uint256 indexed _amount, uint256 indexed _index, address _wallet);
 
     /// @dev transfer ownership
     function transferOwnership(address _newAdmin) external onlyAdmin {
@@ -64,7 +64,7 @@ contract MTRLVesting {
     function setWallet(address _newWallet) external onlyAdmin {
         require(_newWallet != address(0) && _newWallet != wallet, 'setWallet: invalid wallet');
         wallet = _newWallet;
-        emit SETWALLET(_newWallet);
+        emit SetWallet(_newWallet);
     }
 
     /// @dev anyone can call this function to transfer unlocked tokens to the wallet
@@ -90,6 +90,6 @@ contract MTRLVesting {
             }
         }
 
-        emit CLAIMED(transferAmount, index, wallet);
+        emit Claimed(transferAmount, index, wallet);
     }
 }

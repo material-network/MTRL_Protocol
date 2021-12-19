@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.0;
 
+import 'hardhat/console.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 contract MTRLVesting {
     /// @notice blockNumber that vesting will start
-    uint256 vestingStartBlock;
+    uint256 public immutable vestingStartBlock;
 
     /// @notice tokens will be unlocked per this cycle
     uint256 public immutable UNLOCK_CYCLE;
@@ -14,14 +15,14 @@ contract MTRLVesting {
     /// @notice amount of tokens that will be unlocked per month
     uint256 public constant UNLOCK_AMOUNT = 1000000e18; // 1M
 
+    /// @notice vesting token (in our case, MTRL)
+    IERC20 public immutable token;
+
     /// @notice admin
     address public admin;
 
     /// @notice address that will receive unlocked tokens
     address public wallet;
-
-    /// @notice vesting token (in our case, MTRL)
-    IERC20 public token;
 
     /// @notice true when nth month is unlocked
     mapping(uint256 => bool) public isUnlocked;
@@ -51,12 +52,14 @@ contract MTRLVesting {
     }
 
     event SetWallet(address indexed _newWallet);
+    event SetAdmin(address indexed _newAdmin);
     event Claimed(uint256 indexed _amount, uint256 indexed _index, address _wallet);
 
     /// @dev transfer ownership
     function transferOwnership(address _newAdmin) external onlyAdmin {
         require(admin != _newAdmin && _newAdmin != address(0), 'transferOwnership: invalid admin');
         admin = _newAdmin;
+        emit SetAdmin(_newAdmin);
     }
 
     /// @dev setWallet

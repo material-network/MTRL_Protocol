@@ -55,6 +55,7 @@ export default {
       default: 1,
       kovan: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
       mainnet: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
+      // KP: 0xeeE072318D1B93BCfEB1611BB8C8978a772b75dA
     },
     wallet: {
       default: 2,
@@ -66,12 +67,10 @@ export default {
     currency: 'USD',
     gasPrice: 110,
   },
+  mocha: {
+    timeout: 200000,
+  },
   networks: {
-    // hardhat: {
-    //   forking: {
-    //     url: process.env.MAINNET_PROVIDER_URL as string,
-    //   },
-    // },
     kovan: {
       url: process.env.KOVAN_PROVIDER_URL as string,
       accounts: [process.env.PRIVATE_KEY],

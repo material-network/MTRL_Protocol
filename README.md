@@ -11,4 +11,4 @@
    `npx hardhat deploy --network kovan`
 
 2. verify contract using etherscan
-   `npx hardhat verify --network kovan DEPLOYED_CONTRACT_ADDRESS "Constructor argument 1"`
+   `npx hardhat --network kovan verify --constructor-args arguments.js 0xAe98DE14a5afD7c531bAfEbbEA84FFEfEacAE4D8`

@@ -2,12 +2,6 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 const { ethers } = require('hardhat');
 
-import {
-  UNLOCK_CYCLE_MAIN_NET,
-  UNLOCK_CYCLE_TEST_NNET,
-  START_VESTING_AFTER_BLOCKS,
-} from '../helpers/constants';
-
 // deploy/1-deploy-MTRLVesting.ts
 const deployMTRLVesting: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -19,15 +13,14 @@ const deployMTRLVesting: DeployFunction = async function (hre: HardhatRuntimeEnv
   const chainId = await getChainId();
 
   const mtrl = await get('MTRL');
-  const currentBlockNumber = await ethers.provider.getBlockNumber();
-  const vestingStartBlock = currentBlockNumber + START_VESTING_AFTER_BLOCKS;
 
-  let unlockCycle;
+  let unlockCycle = 2 * 24 * 60 * 5; // 2 days
+  let vestingStartBlock = (await ethers.provider.getBlockNumber()) + 60 * 5; // after 1 hour (5 blocks per min)
+  console.log('===>vestingStartBlock', vestingStartBlock);
+
   if (chainId === '1') {
     // mainnet
-    unlockCycle = UNLOCK_CYCLE_MAIN_NET;
-  } else {
-    unlockCycle = UNLOCK_CYCLE_TEST_NNET;
+    unlockCycle = 30 * 24 * 60 * 5; // 30 days
   }
 
   await deploy('MTRLVesting', {

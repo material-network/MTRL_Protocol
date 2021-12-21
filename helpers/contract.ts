@@ -41,3 +41,19 @@ export const getMTRLVestingDeployment = async (): Promise<MTRLVesting> => {
     ).address
   )) as MTRLVesting;
 };
+
+export const deployMTRLVesting = async (
+  mtrl: string,
+  admin: string,
+  wallet: string,
+  vestingStartBlock: number,
+  unlockCycle: number
+) => {
+  return await deployContract<MTRLVesting>('MTRLVesting', [
+    mtrl,
+    admin,
+    wallet,
+    vestingStartBlock,
+    unlockCycle,
+  ]);
+};

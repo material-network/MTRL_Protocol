@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import 'hardhat/console.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import 'hardhat/console.sol';
 
 contract MTRLVesting {
     /// @notice blockNumber that vesting will start
@@ -80,6 +80,7 @@ contract MTRLVesting {
         // record claiming month index
         uint256 index;
         uint256 transferAmount;
+
         if (block.number - vestingStartBlock >= UNLOCK_CYCLE) {
             index = (block.number - vestingStartBlock) / UNLOCK_CYCLE;
 
@@ -90,9 +91,8 @@ contract MTRLVesting {
                 isUnlocked[index] = true;
 
                 token.transfer(wallet, transferAmount);
+                emit Claimed(transferAmount, index, wallet);
             }
         }
-
-        emit Claimed(transferAmount, index, wallet);
     }
 }

@@ -2,13 +2,7 @@ import { expect } from 'chai';
 import { constants } from 'ethers';
 
 import { expandToDecimals } from '../helpers/utils';
-import { runTestSuite, TestVars, advanceBlocks } from './lib';
-
-const UNLOCK_CYCLE_TEST_NNET = 2 * 24 * 60 * 5; // 2 days
-const START_VESTING_AFTER_BLOCKS = 60 * 5; // after 1 hour (5 blocks per min)
-
-const UnlockAmount = expandToDecimals(1000000, 18);
-const VestingBalance = UnlockAmount.mul(18);
+import { runTestSuite, TestVars, advanceBlocks, UnlockAmount, VestingBalance } from './lib';
 
 runTestSuite('MTRLVesting', (vars: TestVars) => {
   describe('reveted cases', async () => {
@@ -37,9 +31,9 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
     });
 
     it('reverted since empty balance reverted ', async () => {
-      const { MTRLVesting } = vars;
+      const { MTRLVesting, blocksTilVestingStart } = vars;
 
-      await advanceBlocks(START_VESTING_AFTER_BLOCKS);
+      await advanceBlocks(blocksTilVestingStart);
       await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');
     });
   });
@@ -59,6 +53,8 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
     it('vesting process', async () => {
       const {
         MTRLVesting,
+        blocksTilVestingStart,
+        vestingUnlockCycle,
         MTRL,
         accounts: [deployer, admin, wallet],
       } = vars;
@@ -66,23 +62,13 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
       // transfer vesting amount
       await MTRL.connect(admin.signer).transfer(MTRLVesting.address, VestingBalance);
 
-      // start vesting
-      await advanceBlocks(START_VESTING_AFTER_BLOCKS + 1);
-
-      // doing claim before one month
-      await expect(MTRLVesting.claim())
-        .to.emit(MTRLVesting, 'Claimed')
-        .withArgs(0, 0, wallet.address);
+      // 1 month after vesting starts
+      await advanceBlocks(blocksTilVestingStart + vestingUnlockCycle);
 
       let prevVestingBalance;
       let afterVestingBalance;
       let prevWalletBalance;
       let afterWalletBalance;
-
-      // after one month
-      await advanceBlocks(UNLOCK_CYCLE_TEST_NNET);
-
-      expect(await MTRLVesting.isUnlocked(0)).to.false;
 
       for (let i = 1; i <= 18; i++) {
         prevVestingBalance = await MTRL.balanceOf(MTRLVesting.address);
@@ -108,9 +94,7 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
           prevWalletBalance = afterWalletBalance;
 
           // doing again soon
-          await expect(await MTRLVesting.claim())
-            .to.emit(MTRLVesting, 'Claimed')
-            .withArgs(0, i, wallet.address);
+          await MTRLVesting.claim();
 
           afterVestingBalance = await MTRL.balanceOf(MTRLVesting.address);
           expect(afterVestingBalance).to.be.eq(prevVestingBalance);
@@ -122,7 +106,7 @@ runTestSuite('MTRLVesting', (vars: TestVars) => {
           await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');
         }
 
-        await advanceBlocks(UNLOCK_CYCLE_TEST_NNET);
+        await advanceBlocks(vestingUnlockCycle);
       }
 
       await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');

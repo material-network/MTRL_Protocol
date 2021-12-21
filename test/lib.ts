@@ -4,7 +4,7 @@ import { assert } from 'chai';
 
 import { MTRL, MTRLVesting } from '../types';
 import { EthereumAddress } from '../helpers/types';
-import { getMTRLDeployment, getMTRLVestingDeployment } from '../helpers/contract';
+import { getMTRLDeployment, deployMTRLVesting } from '../helpers/contract';
 import { expandToDecimals } from '../helpers/utils';
 
 export interface IAccount {
@@ -18,6 +18,8 @@ export interface TestVars {
   MTRLVesting: MTRLVesting;
   accounts: IAccount[];
   admin: IAccount;
+  blocksTilVestingStart: number;
+  vestingUnlockCycle: number;
 }
 
 const testVars: TestVars = {
@@ -25,13 +27,18 @@ const testVars: TestVars = {
   MTRLVesting: {} as MTRLVesting,
   accounts: {} as IAccount[],
   admin: {} as IAccount,
+  blocksTilVestingStart: {} as number,
+  vestingUnlockCycle: {} as number,
 };
 
 export const userBalance = expandToDecimals(10, 18);
 export const totalSupply = expandToDecimals(100000000, 18);
+export const UnlockAmount = expandToDecimals(1000000, 18);
+export const VestingBalance = UnlockAmount.mul(18);
 
 const setupTestEnv = async (vars: TestVars) => {
   const { accounts, admin } = vars;
+
   const MTRL = await getMTRLDeployment();
 
   // sent userBalance tokens to all users
@@ -41,9 +48,21 @@ const setupTestEnv = async (vars: TestVars) => {
     }
   }
 
-  const MTRLVesting = await getMTRLVestingDeployment();
+  // setup MTRLVesting
+  const [deployer, vestingAdmin, vestingWallet] = accounts;
+  const blocksTilVestingStart = 60 * 5;
+  const vestingStartBlock = (await ethers.provider.getBlockNumber()) + blocksTilVestingStart;
+  const vestingUnlockCycle = 60 * 5; // 1 hour for testnet
 
-  return { MTRL, MTRLVesting };
+  const MTRLVesting = await deployMTRLVesting(
+    MTRL.address,
+    vestingAdmin.address,
+    vestingWallet.address,
+    vestingStartBlock,
+    vestingUnlockCycle
+  );
+
+  return { MTRL, MTRLVesting, blocksTilVestingStart, vestingUnlockCycle };
 };
 
 export function runTestSuite(title: string, tests: (arg: TestVars) => void) {

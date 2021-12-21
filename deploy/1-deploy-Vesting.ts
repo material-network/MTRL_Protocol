@@ -10,17 +10,10 @@ const deployMTRLVesting: DeployFunction = async function (hre: HardhatRuntimeEnv
     getChainId,
   } = hre;
   const { deployer, admin, wallet } = await getNamedAccounts();
-  const chainId = await getChainId();
-
   const mtrl = await get('MTRL');
 
-  let unlockCycle = 2 * 24 * 60 * 5; // 2 days
-  let vestingStartBlock = (await ethers.provider.getBlockNumber()) + 60 * 5; // after 1 hour (5 blocks per min)
-
-  if (chainId === '1') {
-    // mainnet
-    unlockCycle = 30 * 24 * 60 * 5; // 30 days
-  }
+  const vestingStartBlock = await ethers.provider.getBlockNumber();
+  const unlockCycle = 30 * 24 * 60 * 5;
 
   await deploy('MTRLVesting', {
     from: deployer,

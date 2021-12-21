@@ -16,7 +16,6 @@ const deployMTRLVesting: DeployFunction = async function (hre: HardhatRuntimeEnv
 
   let unlockCycle = 2 * 24 * 60 * 5; // 2 days
   let vestingStartBlock = (await ethers.provider.getBlockNumber()) + 60 * 5; // after 1 hour (5 blocks per min)
-  console.log('===>vestingStartBlock', vestingStartBlock);
 
   if (chainId === '1') {
     // mainnet

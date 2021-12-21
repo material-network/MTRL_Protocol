@@ -3,57 +3,58 @@ import { constants } from 'ethers';
 
 import { expandToDecimals } from '../helpers/utils';
 import { runTestSuite, TestVars, advanceBlocks } from './lib';
-import { UNLOCK_CYCLE_TEST_NNET, START_VESTING_AFTER_BLOCKS } from '../helpers/constants';
 
-const amount = expandToDecimals(1, 18);
+const UNLOCK_CYCLE_TEST_NNET = 2 * 24 * 60 * 5; // 2 days
+const START_VESTING_AFTER_BLOCKS = 60 * 5; // after 1 hour (5 blocks per min)
+
 const UnlockAmount = expandToDecimals(1000000, 18);
 const VestingBalance = UnlockAmount.mul(18);
 
 runTestSuite('MTRLVesting', (vars: TestVars) => {
-  // describe('reveted cases', async () => {
-  //   it('claim reverted before start vesting', async () => {
-  //     const { MTRLVesting } = vars;
-  //     await expect(MTRLVesting.claim()).to.be.revertedWith('claim: vesting not started');
-  //   });
+  describe('reveted cases', async () => {
+    it('claim reverted before start vesting', async () => {
+      const { MTRLVesting } = vars;
+      await expect(MTRLVesting.claim()).to.be.revertedWith('claim: vesting not started');
+    });
 
-  //   it('setWallet reverted ', async () => {
-  //     const {
-  //       MTRLVesting,
-  //       accounts: [deployer, admin, wallet, newWallet],
-  //     } = vars;
+    it('setWallet reverted ', async () => {
+      const {
+        MTRLVesting,
+        accounts: [deployer, admin, wallet, newWallet],
+      } = vars;
 
-  //     await expect(MTRLVesting.setWallet(newWallet.address)).to.be.revertedWith(
-  //       'onlyAdmin: caller is not the owner'
-  //     );
+      await expect(MTRLVesting.setWallet(newWallet.address)).to.be.revertedWith(
+        'onlyAdmin: caller is not the owner'
+      );
 
-  //     await expect(
-  //       MTRLVesting.connect(admin.signer).setWallet(constants.AddressZero)
-  //     ).to.be.revertedWith('setWallet: invalid wallet');
+      await expect(
+        MTRLVesting.connect(admin.signer).setWallet(constants.AddressZero)
+      ).to.be.revertedWith('setWallet: invalid wallet');
 
-  //     await expect(MTRLVesting.connect(admin.signer).setWallet(wallet.address)).to.be.revertedWith(
-  //       'setWallet: invalid wallet'
-  //     );
-  //   });
+      await expect(MTRLVesting.connect(admin.signer).setWallet(wallet.address)).to.be.revertedWith(
+        'setWallet: invalid wallet'
+      );
+    });
 
-  //   it('reverted since empty balance reverted ', async () => {
-  //     const { MTRLVesting } = vars;
+    it('reverted since empty balance reverted ', async () => {
+      const { MTRLVesting } = vars;
 
-  //     await advanceBlocks(START_VESTING_AFTER_BLOCKS);
-  //     await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');
-  //   });
-  // });
+      await advanceBlocks(START_VESTING_AFTER_BLOCKS);
+      await expect(MTRLVesting.claim()).to.be.revertedWith('claim: no tokens');
+    });
+  });
 
   describe('success cases', async () => {
-    // it('set new Wallet', async () => {
-    //   const {
-    //     MTRLVesting,
-    //     accounts: [deployer, admin, wallet, newWallet],
-    //   } = vars;
+    it('set new Wallet', async () => {
+      const {
+        MTRLVesting,
+        accounts: [deployer, admin, wallet, newWallet],
+      } = vars;
 
-    //   expect(await MTRLVesting.wallet()).to.be.equal(wallet.address);
-    //   await MTRLVesting.connect(admin.signer).setWallet(newWallet.address);
-    //   expect(await MTRLVesting.wallet()).to.be.equal(newWallet.address);
-    // });
+      expect(await MTRLVesting.wallet()).to.be.equal(wallet.address);
+      await MTRLVesting.connect(admin.signer).setWallet(newWallet.address);
+      expect(await MTRLVesting.wallet()).to.be.equal(newWallet.address);
+    });
 
     it('vesting process', async () => {
       const {

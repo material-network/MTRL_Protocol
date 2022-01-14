@@ -8,13 +8,13 @@ Deployed_Addrss: https://etherscan.io/address/0x13c99770694f07279607a6274f28a28c
 
 ### deploy
 
-When deploy, should set `mtrl token address`, `admin address`, `wallet address`, `vestingStartBlock`, `vestingUnlockCyclePeriod`
+When deploy, should set `mtrl token address`, `admin address`, `wallet address`, `vestingUnlockCyclePeriod`
+Vesting start from blockNumber of contract_deployed_block + 1
 
 - `mtrl token address`
 - `admin address`: admin can transfer ownership and can set `wallet address`
 - `wallet address`: this is the address that will receive unlocked tokens
-- `vestingStartBlock`: block number that vesting will start
-- `vestingUnlockCyclePeriod`: blocks of cycle that tokens are unlocked (should be 1 month on mainnet)
+- `vestingUnlockCyclePeriod`: blocks of cycle that tokens are unlocked, 30 * 24 * 60 * 4 = (1 month by assuming 4 blocks per minute)
 
 ### methods
 
@@ -29,11 +29,11 @@ When deploy, should set `mtrl token address`, `admin address`, `wallet address`,
 #### claim
 
 - anyone can call this function to unlock 1M tokens per month and send them to the `wallet`
-- first release will be available at `vestingStartBlock + vestingUnlockCyclePeriod` block
+- first release will be available after vestingUnlockCyclePeriod blocks of deploy
 
 1. the tx will be failed when
 
-- vesting not started.
+- vesting not started or 1 month is not passed yet from contract deploy
 - vesting contract has not enough tokens.
 
-2. when this funciton is called multiple times in one cycle, only the first will unlock and send tokens even though the tx is not failed.
+2. this will withdraw together with unclaimed amount for the previous month too.

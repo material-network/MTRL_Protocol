@@ -3,10 +3,13 @@
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 contract MTRLVesting {
     using SafeERC20 for IERC20;
+
+    /// @notice blocks per month by assuming 4 blocks per minute
+    uint256 public constant blocksPerMonth = 30 * 24 * 60 * 4;
 
     /// @notice blockNumber that vesting will start
     uint256 public immutable vestingStartBlock;
@@ -16,6 +19,9 @@ contract MTRLVesting {
 
     /// @notice amount of tokens that will be unlocked per month
     uint256 public constant UNLOCK_AMOUNT = 1000000e18; // 1M
+
+    /// @notice lastClaimIndex
+    uint256 public lastClaimIndex;
 
     /// @notice vesting token (in our case, MTRL)
     IERC20 public immutable token;
@@ -38,13 +44,17 @@ contract MTRLVesting {
         require(address(_token) != address(0), 'constructor: invalid MTRL');
         require(_admin != address(0), 'constructor: invalid admin');
         require(_wallet != address(0), 'constructor: invalid wallet');
-        require(_unlockCycle != 0, 'constructor: invalid unlockCycle');
+        require(
+            _unlockCycle != 0 && _unlockCycle <= blocksPerMonth,
+            'constructor: invalid unlockCycle'
+        );
 
         admin = _admin;
         token = _token;
         UNLOCK_CYCLE = _unlockCycle;
         vestingStartBlock = block.number + 1;
         wallet = _wallet;
+        lastClaimIndex = 1;
     }
 
     modifier onlyAdmin() {
@@ -85,7 +95,7 @@ contract MTRLVesting {
         uint256 totalClaimAmount;
 
         // check missing months that should be claimed
-        for (uint256 i = 1; i <= monthIndex; i++) {
+        for (uint256 i = lastClaimIndex; i <= monthIndex; i++) {
             if (tokenBalance > totalClaimAmount && unlockedAmount[i] == 0) {
                 uint256 availableAmount = tokenBalance - totalClaimAmount;
 
@@ -95,6 +105,7 @@ contract MTRLVesting {
 
                 unlockedAmount[i] = claimAmount;
                 totalClaimAmount += claimAmount;
+                lastClaimIndex = i;
             }
         }
 

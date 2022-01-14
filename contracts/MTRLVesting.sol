@@ -45,7 +45,7 @@ contract MTRLVesting {
         require(_admin != address(0), 'constructor: invalid admin');
         require(_wallet != address(0), 'constructor: invalid wallet');
         require(
-            _unlockCycle != 0 && _unlockCycle <= blocksPerMonth,
+            _unlockCycle > 0 && _unlockCycle <= blocksPerMonth,
             'constructor: invalid unlockCycle'
         );
 

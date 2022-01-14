@@ -3,9 +3,11 @@
 pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import 'hardhat/console.sol';
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract MTRLVesting {
+    using SafeERC20 for IERC20;
+
     /// @notice blockNumber that vesting will start
     uint256 public immutable vestingStartBlock;
 
@@ -24,25 +26,24 @@ contract MTRLVesting {
     /// @notice address that will receive unlocked tokens
     address public wallet;
 
-    /// @notice true when nth month is unlocked
-    mapping(uint256 => bool) public isUnlocked;
+    /// @notice return unlocked amount per month
+    mapping(uint256 => uint256) public unlockedAmount;
 
     constructor(
         IERC20 _token,
         address _admin,
         address _wallet,
-        uint256 _vestingStartBlock,
         uint256 _unlockCycle
     ) {
-        require(_vestingStartBlock != 0, 'constructor: invalid vesting start block');
         require(address(_token) != address(0), 'constructor: invalid MTRL');
         require(_admin != address(0), 'constructor: invalid admin');
         require(_wallet != address(0), 'constructor: invalid wallet');
+        require(_unlockCycle != 0, 'constructor: invalid unlockCycle');
 
         admin = _admin;
         token = _token;
-        vestingStartBlock = _vestingStartBlock;
         UNLOCK_CYCLE = _unlockCycle;
+        vestingStartBlock = block.number + 1;
         wallet = _wallet;
     }
 
@@ -53,7 +54,7 @@ contract MTRLVesting {
 
     event SetWallet(address indexed _newWallet);
     event SetAdmin(address indexed _newAdmin);
-    event Claimed(uint256 indexed _amount, uint256 indexed _index, address _wallet);
+    event Claimed(uint256 _claimedBlock, uint256 indexed _amount, address indexed _wallet);
 
     /// @dev transfer ownership
     function transferOwnership(address _newAdmin) external onlyAdmin {
@@ -74,25 +75,32 @@ contract MTRLVesting {
     function claim() external {
         require(block.number >= vestingStartBlock, 'claim: vesting not started');
 
-        uint256 vestingBalance = token.balanceOf(address(this));
-        require(vestingBalance > 0, 'claim: no tokens');
+        uint256 passedBlocks = block.number - vestingStartBlock;
+        require(passedBlocks >= UNLOCK_CYCLE, 'claim: not claimable yet');
 
-        // record claiming month index
-        uint256 index;
-        uint256 transferAmount;
+        uint256 tokenBalance = token.balanceOf(address(this));
+        require(tokenBalance > 0, 'claim: no tokens');
 
-        if (block.number - vestingStartBlock >= UNLOCK_CYCLE) {
-            index = (block.number - vestingStartBlock) / UNLOCK_CYCLE;
+        uint256 monthIndex = passedBlocks / UNLOCK_CYCLE;
+        uint256 totalClaimAmount;
 
-            if (!isUnlocked[index]) {
-                transferAmount = vestingBalance < UNLOCK_AMOUNT
-                    ? token.balanceOf(address(this))
-                    : UNLOCK_AMOUNT;
-                isUnlocked[index] = true;
+        // check missing months that should be claimed
+        for (uint256 i = 1; i <= monthIndex; i++) {
+            if (tokenBalance > totalClaimAmount && unlockedAmount[i] == 0) {
+                uint256 availableAmount = tokenBalance - totalClaimAmount;
 
-                token.transfer(wallet, transferAmount);
-                emit Claimed(transferAmount, index, wallet);
+                uint256 claimAmount = availableAmount >= UNLOCK_AMOUNT
+                    ? UNLOCK_AMOUNT
+                    : availableAmount;
+
+                unlockedAmount[i] = claimAmount;
+                totalClaimAmount += claimAmount;
             }
+        }
+
+        if (totalClaimAmount > 0) {
+            token.safeTransfer(wallet, totalClaimAmount);
+            emit Claimed(block.number, totalClaimAmount, wallet);
         }
     }
 }

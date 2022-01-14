@@ -33,8 +33,7 @@ const testVars: TestVars = {
 
 export const userBalance = expandToDecimals(10, 18);
 export const totalSupply = expandToDecimals(100000000, 18);
-export const UnlockAmount = expandToDecimals(1000000, 18);
-export const VestingBalance = UnlockAmount.mul(18);
+export const VestingAmount = expandToDecimals(18000000, 18);
 
 const setupTestEnv = async (vars: TestVars) => {
   const { accounts, admin } = vars;
@@ -50,19 +49,16 @@ const setupTestEnv = async (vars: TestVars) => {
 
   // setup MTRLVesting
   const [deployer, vestingAdmin, vestingWallet] = accounts;
-  const blocksTilVestingStart = 60 * 5;
-  const vestingStartBlock = (await ethers.provider.getBlockNumber()) + blocksTilVestingStart;
   const vestingUnlockCycle = 60 * 5; // 1 hour for testnet
 
   const MTRLVesting = await deployMTRLVesting(
     MTRL.address,
     vestingAdmin.address,
     vestingWallet.address,
-    vestingStartBlock,
     vestingUnlockCycle
   );
 
-  return { MTRL, MTRLVesting, blocksTilVestingStart, vestingUnlockCycle };
+  return { MTRL, MTRLVesting, vestingUnlockCycle };
 };
 
 export function runTestSuite(title: string, tests: (arg: TestVars) => void) {

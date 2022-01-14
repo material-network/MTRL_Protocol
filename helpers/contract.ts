@@ -46,14 +46,7 @@ export const deployMTRLVesting = async (
   mtrl: string,
   admin: string,
   wallet: string,
-  vestingStartBlock: number,
   unlockCycle: number
 ) => {
-  return await deployContract<MTRLVesting>('MTRLVesting', [
-    mtrl,
-    admin,
-    wallet,
-    vestingStartBlock,
-    unlockCycle,
-  ]);
+  return await deployContract<MTRLVesting>('MTRLVesting', [mtrl, admin, wallet, unlockCycle]);
 };

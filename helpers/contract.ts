@@ -1,7 +1,7 @@
 import { deployments, ethers } from 'hardhat';
 import { Contract } from 'ethers';
 import { MTRL, MTRLVesting } from '../types';
-import { ContractId } from './types';
+import { ContractId, EthereumAddress } from './types';
 
 export const deployContract = async <ContractType extends Contract>(
   contractName: string,
@@ -24,12 +24,10 @@ export const deployMTRL = async (admin: string) => {
   return await deployContract<MTRL>('MTRL', [admin]);
 };
 
-export const getMTRLDeployment = async (): Promise<MTRL> => {
+export const getMTRLDeployment = async (address?: EthereumAddress): Promise<MTRL> => {
   return (await ethers.getContractAt(
     ContractId.MTRL,
-    (
-      await deployments.get(ContractId.MTRL)
-    ).address
+    address || (await deployments.get(ContractId.MTRL)).address
   )) as MTRL;
 };
 

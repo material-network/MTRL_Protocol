@@ -55,7 +55,6 @@ export default {
       default: 1,
       kovan: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
       mainnet: '0xabB6D4a1015e291b1bc71e7e56ff2c9204665b07',
-      // KP: 0xeeE072318D1B93BCfEB1611BB8C8978a772b75dA
     },
     wallet: {
       default: 2,
@@ -80,7 +79,7 @@ export default {
       accounts: [process.env.PRIVATE_KEY],
       saveDeployments: true,
       gas: 2400000,
-      gasPrice: 100 * 1000000000,
+      gasPrice: 120 * 1000000000,
     },
   },
   etherscan: {
